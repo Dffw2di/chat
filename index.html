@@ -3,44 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام التشفير الحسابي | الخطاب</title>
+    <title>AL-KHATTAB PHANTOM PROTOCOL</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f0c29; color: #00ffcc; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-        .box { background: rgba(20, 30, 48, 0.9); padding: 30px; border-radius: 15px; box-shadow: 0 0 20px #00ffcc; width: 90%; max-width: 400px; text-align: center; border: 1px solid #00ffcc; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #00ffcc; background: #1b1b1b; color: white; outline: none; }
-        button { width: 100%; padding: 12px; background: #00ffcc; color: #0f0c29; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        #chat-screen { width: 100%; height: 100vh; max-width: 700px; display: flex; flex-direction: column; background: #0f0c29; }
-        #messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
-        .msg { background: #1b1b1b; padding: 10px 15px; border-radius: 10px; align-self: flex-start; border-left: 3px solid #00ffcc; }
-        .msg b { display: block; font-size: 0.8em; color: #ff007f; }
-        .input-area { padding: 20px; background: #16213e; display: flex; gap: 10px; }
+        :root { --main: #00f2ff; --accent: #7000ff; --bg: #050505; }
+        * { box-sizing: border-box; }
+        body { background: var(--bg); color: var(--main); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; overflow: hidden; }
+
+        /* تأثير الجسيمات المتحركة في الخلفية */
+        #bg-canvas { position: fixed; inset: 0; z-index: -1; filter: blur(2px); }
+
+        .glass-terminal { width: 95%; max-width: 1300px; height: 92vh; margin: 4vh auto; background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(0, 242, 255, 0.2); border-radius: 20px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 0 100px rgba(0, 0, 0, 1); }
+
+        .top-nav { padding: 20px; background: rgba(0, 242, 255, 0.1); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0, 242, 255, 0.2); }
+        .status-dot { width: 10px; height: 10px; background: #0f0; border-radius: 50%; box-shadow: 0 0 10px #0f0; display: inline-block; margin-right: 10px; }
+
+        #stream { flex: 1; overflow-y: auto; padding: 30px; scrollbar-width: none; }
+        .msg-node { margin-bottom: 20px; padding: 20px; background: rgba(112, 0, 255, 0.05); border-left: 3px solid var(--accent); border-radius: 0 15px 15px 0; position: relative; transition: 0.3s; }
+        .msg-node:hover { background: rgba(112, 0, 255, 0.1); transform: translateX(-5px); }
+        .meta { font-size: 10px; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+
+        .input-bar { padding: 30px; background: rgba(0, 0, 0, 0.5); display: flex; gap: 20px; }
+        input { flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--main); border-radius: 10px; color: white; padding: 15px 25px; font-size: 18px; outline: none; transition: 0.3s; }
+        input:focus { box-shadow: 0 0 20px rgba(0, 242, 255, 0.4); }
+        button { background: linear-gradient(45deg, var(--main), var(--accent)); color: white; border: none; padding: 15px 40px; border-radius: 10px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
+
+        .auth-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 1s; }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div id="auth-screen" class="box">
-        <h2>المفتاح العددي</h2>
-        <p>أدخل رقماً سرياً للتشفير الحسابي</p>
-        <input type="number" id="crypto-num" placeholder="مثلاً: 55">
-        <button onclick="saveKey()">تشفير النظام</button>
-    </div>
+    <canvas id="bg-canvas"></canvas>
 
-    <div id="name-screen" class="box hidden">
-        <h2>الاسم المستعار</h2>
-        <input type="text" id="user-name" placeholder="اكتب اسمك">
-        <button onclick="enterChat()">دخول</button>
-    </div>
-
-    <div id="chat-screen" class="hidden">
-        <div id="messages"></div>
-        <div class="input-area">
-            <input type="text" id="msg-input" placeholder="اكتب رسالتك...">
-            <button onclick="sendMessage()">إرسال</button>
+    <!-- واجهة الدخول الأمنية -->
+    <div id="auth" class="auth-overlay">
+        <h1 style="letter-spacing: 15px; margin-bottom: 30px; text-shadow: 0 0 20px var(--main);">PHANTOM_LOGIN</h1>
+        <div style="width: 400px; padding: 40px; background: rgba(255,255,255,0.02); border: 1px solid var(--main); border-radius: 20px;">
+            <input type="password" id="key-input" placeholder="ACCESS_SEED_STREAMS" style="width: 100%; text-align: center; margin-bottom: 20px;">
+            <button onclick="access()" style="width: 100%;">AUTHENTICATE</button>
         </div>
-        <button id="admin-btn" class="hidden" onclick="resetDB()" style="background:#ff007f; color:white;">تصفير البيانات</button>
+    </div>
+
+    <!-- المحطة الرئيسية -->
+    <div class="glass-terminal hidden" id="terminal">
+        <div class="top-nav">
+            <div><span class="status-dot"></span> SECURE CHANNEL: AL-KHATTAB_V5</div>
+            <div id="clock" style="font-weight: bold;">00:00:00</div>
+        </div>
+        <div id="stream"></div>
+        <div class="input-bar">
+            <input type="text" id="msg-input" placeholder="أدخل البيانات المراد تشفيرها ونقلها عبر الأطياف..." autocomplete="off">
+            <button onclick="transmit()">SEND_PHANTOM</button>
+        </div>
     </div>
 
 <script>
@@ -57,75 +73,116 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     
-    let currentUser = "";
-    let mathKey = 1;
+    let globalSeed = 0;
+    const userAlias = "الخطاب";
 
-    function saveKey() {
-        const val = document.getElementById('crypto-num').value;
+    function access() {
+        const val = document.getElementById('key-input').value;
         if(val) {
-            mathKey = parseInt(val);
-            document.getElementById('auth-screen').classList.add('hidden');
-            document.getElementById('name-screen').classList.remove('hidden');
+            globalSeed = parseInt(val);
+            document.getElementById('auth').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('auth').classList.add('hidden');
+                document.getElementById('terminal').classList.remove('hidden');
+                initSync();
+            }, 1000);
         }
     }
 
-    function enterChat() {
-        const name = document.getElementById('user-name').value;
-        if(name) {
-            currentUser = name;
-            if(name === "الخطاب") document.getElementById('admin-btn').classList.remove('hidden');
-            document.getElementById('name-screen').classList.add('hidden');
-            document.getElementById('chat-screen').classList.remove('hidden');
-            loadMessages();
+    // --- خوارزمية PHANTOM (تشفير المصفوفة المتغيرة) ---
+    function phantomCrypt(text, seed, mode) {
+        if(mode === 'enc') {
+            let b64 = btoa(unescape(encodeURIComponent(text))); // تحويل لـ Base64 أولاً
+            return b64.split('').map((char, i) => {
+                let code = (char.charCodeAt(0) ^ (seed + i)) + 5;
+                return code.toString(16);
+            }).join('.');
+        } else {
+            try {
+                let hexParts = text.split('.');
+                let b64Decoded = hexParts.map((h, i) => {
+                    let num = parseInt(h, 16);
+                    return String.fromCharCode((num - 5) ^ (seed + i));
+                }).join('');
+                return decodeURIComponent(escape(atob(b64Decoded)));
+            } catch(e) { return "[CORRUPTED_SIGNAL]"; }
         }
     }
 
-    // --- خوارزمية التشفير الحسابية الخاصة بالخطاب ---
-    function encrypt(text, key) {
-        return text.split('').map(char => {
-            // تحويل الحرف لعدد ثم ضربه في المفتاح وجمعه مع رقم ثابت
-            return (char.charCodeAt(0) * key) + 7; 
-        }).join(',');
-    }
-
-    function decrypt(cipher, key) {
-        try {
-            return cipher.split(',').map(num => {
-                // عكس العملية: طرح الثابت ثم القسمة على المفتاح
-                return String.fromCharCode((parseInt(num) - 7) / key);
-            }).join('');
-        } catch(e) { return "🔒 مفتاح خاطئ"; }
-    }
-
-    function sendMessage() {
-        const text = document.getElementById('msg-input').value;
-        if(text) {
-            const secretData = encrypt(text, mathKey);
-            db.ref("global_chat").push().set({
-                user: currentUser,
-                message: secretData,
-                timestamp: Date.now()
+    function transmit() {
+        const input = document.getElementById('msg-input');
+        if(input.value) {
+            const data = phantomCrypt(input.value, globalSeed, 'enc');
+            db.ref("phantom_signals").push().set({
+                sender: userAlias,
+                payload: data,
+                timestamp: new Date().toLocaleTimeString()
             });
-            document.getElementById('msg-input').value = "";
+            input.value = "";
         }
     }
 
-    function loadMessages() {
-        db.ref("global_chat").on("child_added", (snapshot) => {
-            const data = snapshot.val();
-            const original = decrypt(data.message, mathKey);
+    function initSync() {
+        db.ref("phantom_signals").limitToLast(30).on("child_added", (snap) => {
+            const val = snap.val();
+            const original = phantomCrypt(val.payload, globalSeed, 'dec');
             
-            const msgDiv = document.createElement("div");
-            msgDiv.className = "msg";
-            msgDiv.innerHTML = `<b>${data.user}</b> ${original}`;
-            document.getElementById('messages').appendChild(msgDiv);
-            document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+            const node = document.createElement("div");
+            node.className = "msg-node";
+            node.innerHTML = `
+                <div class="meta">OPERATOR: ${val.sender} // TIME: ${val.timestamp}</div>
+                <div style="font-size: 18px; color: white;">${original}</div>
+            `;
+            const stream = document.getElementById('stream');
+            stream.appendChild(node);
+            stream.scrollTop = stream.scrollHeight;
         });
     }
 
-    function resetDB() {
-        if(confirm("مسح الكل؟")) db.ref("global_chat").remove();
+    // --- تأثيرات بصرية للخلفية ---
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let particles = [];
+    class Particle {
+        constructor() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * canvas.height;
+            this.size = Math.random() * 2;
+            this.speedX = Math.random() * 1 - 0.5;
+            this.speedY = Math.random() * 1 - 0.5;
+        }
+        update() {
+            this.x += this.speedX;
+            this.y += this.speedY;
+            if (this.size > 0.2) this.size -= 0.01;
+        }
+        draw() {
+            ctx.fillStyle = 'rgba(0, 242, 255, 0.5)';
+            ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+        }
     }
+
+    function handleParticles() {
+        if (particles.length < 100) particles.push(new Particle());
+        for (let i = 0; i < particles.length; i++) {
+            particles[i].update();
+            particles[i].draw();
+            if (particles[i].size <= 0.2) { particles.splice(i, 1); i--; }
+        }
+    }
+
+    function animate() {
+        ctx.fillStyle = 'rgba(5, 5, 5, 0.1)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        handleParticles();
+        requestAnimationFrame(animate);
+    }
+    animate();
+
+    setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString(); }, 1000);
 </script>
 </body>
 </html>
